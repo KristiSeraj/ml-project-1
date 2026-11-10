@@ -1,47 +1,27 @@
-"""Download the original files into data/raw/.
-
-Run from a fresh clone before any notebook:
-
+"""Download the Project 1 data into data/raw/. Run from the repository root:
     python data/get_data.py
-
-Idempotent: a file already present is left alone. Nothing in this script
-edits or deletes anything under data/raw/.
 """
-
-from __future__ import annotations
-
-import sys
 import urllib.request
+import zipfile
 from pathlib import Path
 
-RAW = Path(__file__).resolve().parent / "raw"
+BASE = "https://github.com/evisp/ml-course-labs/releases/download/data-v2/"
+FILES = [
+    "yellow_tripdata_2026_sample.parquet",
+    "taxi_zone_lookup.csv",
+    "taxi_zones.zip",
+    "data_dictionary_trip_records_yellow.pdf",
+]
 
-# filename in data/raw/ -> source URL
-SOURCES: dict[str, str] = {
-    # "rides-june.csv": "https://example.com/rides-june.csv",
-}
+raw = Path(__file__).resolve().parent / "raw"
+raw.mkdir(parents=True, exist_ok=True)
 
+for name in FILES:
+    if not (raw / name).exists():
+        print(f"downloading {name}")
+        urllib.request.urlretrieve(BASE + name, raw / name)
 
-def fetch(name: str, url: str) -> Path:
-    dest = RAW / name
-    if dest.exists():
-        print(f"have   {name}")
-        return dest
-    RAW.mkdir(parents=True, exist_ok=True)
-    print(f"get    {name}  <-  {url}")
-    urllib.request.urlretrieve(url, dest)
-    return dest
+with zipfile.ZipFile(raw / "taxi_zones.zip") as zf:
+    zf.extractall(raw)
 
-
-def main() -> int:
-    if not SOURCES:
-        print("No sources listed yet: fill in SOURCES in data/get_data.py.")
-        return 1
-    for name, url in SOURCES.items():
-        fetch(name, url)
-    print(f"\nraw data in {RAW}")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+print("ready:", sorted(p.name for p in raw.iterdir()))
