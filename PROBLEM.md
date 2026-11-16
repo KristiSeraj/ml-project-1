@@ -41,6 +41,27 @@ in `notebooks/02-clean-and-split.ipynb`, and implements them in
 
 Rows dropped are counted and reported, never silently removed.
 
+### Who belongs in this question
+
+The project requires three further decisions from every team. They are about
+*population*, not measurement: which trips this model is asked to predict at
+all. Each is settled here and implemented in `src.data`; the counts are in
+`notebooks/02-clean-and-split.ipynb`.
+
+| Group | Decision | Why |
+|---|---|---|
+| **Flex fare trips** (`payment_type == 0`, about a quarter of the sample) | **Keep.** Flag with `is_flex_fare`; impute the missing `passenger_count` inside the pipeline. | A passenger in a flex fare trip still wants an arrival time, and the trip's duration is measured the same way. Dropping a quarter of the data to avoid one missing column would answer a narrower question than the one asked. |
+| **Voided trips** (`payment_type == 6`) | **Drop.** | A void means the trip was not billed; the record is an accounting artefact, and its timestamps are not a journey anyone took. |
+| **Disputes and no-charge trips** (`payment_type` 3, 4) | **Keep.** | The dispute is about money, not about the clock. The duration is still a real journey. |
+| **Negative amounts** (`fare_amount < 0` or `total_amount < 0`) | **Flag, do not drop on its own.** | A negative amount marks a correction or refund record. It says nothing directly about the duration, so it is a flag used in the slice tables rather than a reason to remove a row that otherwise passes every validity rule. |
+| **Unknown zones** (`PULocationID` or `DOLocationID` in 264, 265) | **Drop.** | The zone is the model's only geography. A trip that starts or ends outside New York, with no zone, cannot be given a borough, an airport flag, or a sensible route, and it is not the question the app answers. |
+| **Non-standard fares** (`RatecodeID` 5 negotiated, 6 group ride, 99 unknown) | **Keep, and flag.** | `RatecodeID` is set at the *end* of the trip, so it can never be a feature. Using it to **remove training rows** would be a quiet form of leakage: it would shape the training population on knowledge the model will not have at pickup. It is therefore used only as a reporting slice in `MODEL_CARD.md`, never as a filter and never as an input. |
+| **Airport flat fares** (`RatecodeID` 2, 3) | **Keep.** | Same reasoning. The flat fare changes the price, not the journey time. |
+
+Two of these cut against the obvious move, and both are defended above: a
+quarter of the data stays in, and the rate code — tempting as a cleaning
+filter — is not allowed to touch the training population at all.
+
 ## The moment of prediction
 
 Known when the passenger gets in:

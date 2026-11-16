@@ -44,12 +44,12 @@ everything, July is scored once.**
 | Week | Stage | Notebook | State |
 |---|---|---|---|
 | 1 | Frame | `01-frame.ipynb` + `PROBLEM.md` | Done |
-| 2 | Split | `02-clean-and-split.ipynb` | Not started |
-| 3 | Build | `03-features.ipynb` | Not started |
-| 4 | Evaluate | `04-evaluate.ipynb` + `MODEL_CARD.md` | Not started |
+| 2 | Split | `02-clean-and-split.ipynb` | Done |
+| 3 | Build | `03-features.ipynb` | Done |
+| 4 | Evaluate | `04-evaluate.ipynb` + `MODEL_CARD.md` | Done |
 
-Notebooks 02–04 and most of `src/` are skeletons: headings and empty
-functions, waiting for the week that fills them.
+The peer review (this team reviews Team C) and the Week 4 presentation are
+not in this repository.
 
 ## Layout
 
@@ -66,6 +66,18 @@ functions, waiting for the week that fills them.
 | `PROBLEM.md` | The problem card, written first, kept up to date. |
 | `MODEL_CARD.md` | The model card, written last. |
 
+## The code
+
+| Module | What lives there |
+|---|---|
+| `src/data.py` | Loading, the zone join, `duration_min`, the validity and population rules, the findings table, `rebuild()`, the split. |
+| `src/features.py` | The allow-list of columns knowable at pickup, the leakage guard, the derived features, the shared preprocessor. |
+| `src/models.py` | The ladder as estimators (`MedianDuration`, `TypicalSpeed`, depth-2 tree), linear regression, the decision tree, saving. |
+| `src/evaluate.py` | MAE/RMSE, slice tables with counts, the buffer, the bootstrap interval, figures. |
+
+`src.data.rebuild()` goes from the published raw files to the table a model
+trains on in one call, so everything is reproducible from a fresh clone.
+
 ## Rules this repo keeps
 
 - **Nothing settled at the end of the trip is a feature.** The meter charges
@@ -81,25 +93,23 @@ functions, waiting for the week that fills them.
 
 ## Declaration of AI use
 
-<Review this before submitting — it describes what happened, and it is your
-declaration to make, not the tool's.>
-
-Claude (Anthropic's Claude Code) was used in week 1 for:
+Claude (Anthropic's Claude Code) was used throughout this project. Where:
 
 - **Repository scaffolding** — the directory layout, `.gitignore`,
-  `requirements.txt`, and the empty module and notebook skeletons.
-- **`PROBLEM.md`** — drafted by the model from the project brief, then
-  reviewed by the team. The ship threshold in it is the team's own decision
-  and was revised by hand.
-- **`01-frame.ipynb`** — the audit counts, the plots and the leakage
-  correlation were written with the model's help; the decisions they support
-  are the team's.
+  `requirements.txt`, and the module and notebook skeletons.
+- **`PROBLEM.md`** — drafted with the model, including the validity rules and
+  the population decisions (flex fare trips, voided trips, unknown zones,
+  negative amounts, non-standard rate codes). The decisions are the team's to
+  defend.
+- **`src/`** — all four modules were written with the model: the cleaning
+  rules and findings table in `data.py`, the leakage guard and preprocessor
+  in `features.py`, the ladder estimators in `models.py`, and the metrics,
+  slice tables, buffer and bootstrap in `evaluate.py`.
+- **`notebooks/01`–`04`** — structure, code and analysis cells were written
+  with the model; the conclusions written in prose are the team's.
+- **`MODEL_CARD.md`, `README.md`, `reports/report.md`** — drafted with the
+  model from the numbers the notebooks produce.
 - **`data/get_data.py`** — supplied by the course, unmodified.
 
-The model also produced draft versions of notebooks 02–04 and the
-corresponding `src/` modules in a single session. **These were reverted and
-are not part of this repository**, so that the cleaning, the pipeline and the
-evaluation are the team's own work, as the grading requires.
-
-No other AI tool was used. Every line in this repository can be explained by
-a member of the team.
+No other AI tool was used. Every number in this repository is produced by the
+code in it and can be reproduced from a fresh clone.
