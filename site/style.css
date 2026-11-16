@@ -1,0 +1,329 @@
+/* Roles, not raw hex, so light and dark swap in one place.
+ * Colours are the validated default data-viz palette: categorical slot 1
+ * (blue) for the bars, status "critical" for the hours that miss the 90%
+ * promise. Both modes pass the six palette checks
+ * (node scripts/validate_palette.js). */
+
+:root {
+  color-scheme: light;
+  --surface-0: #f4f4f1;
+  --surface-1: #fcfcfb;
+  --surface-2: #eceae4;
+  --border: #dcdad2;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #77756e;
+  --series-1: #2a78d6;
+  --status-critical: #d03b3b;
+  --radius: 10px;
+  --maxw: 54rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --surface-2: #23231f;
+    --border: #35342f;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #96948a;
+    --series-1: #3987e5;
+    --status-critical: #d03b3b;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 1.25rem 4rem;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font: 16px/1.65 ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+main, .hero { max-width: var(--maxw); margin: 0 auto; }
+
+/* ---------------------------------------------------------------- hero */
+
+.hero { padding: 4rem 0 2.5rem; }
+
+.eyebrow {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(2.1rem, 6vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  margin: 0 0 1.75rem;
+  max-width: 40rem;
+  font-size: 1.12rem;
+  color: var(--text-secondary);
+}
+
+.jump { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.jump a {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.jump a:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+/* --------------------------------------------------------------- blocks */
+
+.card, .note {
+  margin: 0 0 1.5rem;
+  padding: 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+}
+
+.note { background: var(--surface-2); }
+
+h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  margin: 2rem 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+p { margin: 0 0 0.9rem; }
+.muted { color: var(--text-secondary); }
+.small { font-size: 0.88rem; }
+code {
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--surface-2);
+  font-size: 0.88em;
+}
+
+/* ------------------------------------------------------------ the form */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.9rem;
+  margin: 1.25rem 0;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+select, input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.95rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+select:focus-visible, input:focus-visible {
+  outline: 2px solid var(--series-1);
+  outline-offset: 1px;
+}
+
+/* ---------------------------------------------------------- the readout */
+
+.readout {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.headline { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
+.headline .label {
+  width: 100%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.headline strong {
+  font-size: clamp(2.6rem, 9vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.headline .unit { color: var(--text-secondary); }
+
+.breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+}
+.breakdown dt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.breakdown dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.caveat {
+  margin: 1.25rem 0 0;
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--series-1);
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+.caveat.warn { border-left-color: var(--status-critical); }
+
+/* --------------------------------------------------------------- tables */
+
+table { width: 100%; border-collapse: collapse; margin: 0 0 0.75rem; font-size: 0.95rem; }
+th, td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+th:first-child, td:first-child { text-align: left; font-variant-numeric: normal; }
+thead th {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+tbody tr:last-child td { border-bottom: 0; }
+tr.chosen td { font-weight: 700; }
+td.miss { color: var(--status-critical); font-weight: 700; }
+
+.facts { margin: 0; padding-left: 1.1rem; color: var(--text-secondary); }
+.facts strong { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+/* ----------------------------------------------------------- the chart */
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;                      /* the 2px surface gap between fills */
+  height: 170px;
+  margin: 0.5rem 0 0.75rem;
+  padding-top: 1.4rem;
+}
+
+.bars .bar { position: relative; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+
+.bars .fill {
+  background: var(--series-1);
+  border-radius: 4px 4px 0 0;    /* rounded data-end, anchored to baseline */
+  min-height: 2px;
+}
+.bars .bar.miss .fill { background: var(--status-critical); }
+
+.bars .tick {
+  margin-top: 0.3rem;
+  font-size: 0.62rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* the hover layer: a tooltip per mark, with a hit target bigger than the bar */
+.bars .bar::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 0.3rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  white-space: pre;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+}
+.bars .bar:hover::after, .bars .bar:focus-visible::after { opacity: 1; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend i {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+  background: var(--series-1);
+}
+.legend i.miss { background: var(--status-critical); }
+
+/* ------------------------------------------------------- how it works */
+
+.how { margin: 1rem 0 0; display: grid; gap: 1.1rem; }
+.how dt { font-weight: 650; }
+.how dd { margin: 0.2rem 0 0; color: var(--text-secondary); }
+
+footer {
+  max-width: var(--maxw);
+  margin: 2.5rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 34rem) {
+  .hero { padding-top: 2.5rem; }
+  .card, .note { padding: 1.25rem; }
+  .bars { height: 130px; }
+}

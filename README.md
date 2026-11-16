@@ -66,6 +66,24 @@ not in this repository.
 | `PROBLEM.md` | The problem card, written first, kept up to date. |
 | `MODEL_CARD.md` | The model card, written last. |
 
+## The site
+
+A static page that runs the model in the browser — no backend, no build step:
+
+```bash
+python site/export.py                  # refit on May, write the page's JSON
+node site/parity.js                    # browser predictions vs scikit-learn
+python -m http.server -d site 8000     # then open http://localhost:8000
+```
+
+The decision tree and the preprocessor's fitted numbers are exported to
+`site/model.json`; `site/model.js` rebuilds the feature vector and walks the
+tree in about 40 lines. Because an app has no measured distance at pickup,
+the page estimates the route from the zone shapefile — centre to centre,
+times a detour factor of 1.27 learned on May — and says so on the page.
+`site/README.md` has the detail; `.github/workflows/pages.yml` deploys it to
+GitHub Pages on a manual trigger, and refuses to deploy if parity fails.
+
 ## The code
 
 | Module | What lives there |
@@ -109,6 +127,8 @@ Claude (Anthropic's Claude Code) was used throughout this project. Where:
   with the model; the conclusions written in prose are the team's.
 - **`MODEL_CARD.md`, `README.md`, `reports/report.md`** — drafted with the
   model from the numbers the notebooks produce.
+- **`site/`** — the whole static site (page, stylesheet, browser model,
+  exporter, parity check) was written with the model.
 - **`data/get_data.py`** — supplied by the course, unmodified.
 
 No other AI tool was used. Every number in this repository is produced by the

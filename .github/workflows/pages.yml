@@ -1,0 +1,47 @@
+# Publish site/ to GitHub Pages.
+#
+# Manually triggered on purpose: the page must only go live after
+# `python site/export.py` and `node site/parity.js` have been run against the
+# current model, so what the page says matches what the notebooks found.
+name: Deploy site
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # The exported files are committed, so this check runs without the raw
+      # data: it proves the committed model.json agrees with the scikit-learn
+      # predictions committed alongside it.
+      - name: The page must agree with scikit-learn
+        run: node site/parity.js
+
+  deploy:
+    needs: parity
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

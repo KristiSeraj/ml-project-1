@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How long will this trip take? · NYC taxi duration, predicted at pickup</title>
+<meta name="description" content="A decision tree, trained on 189,024 May 2026 yellow taxi trips, that estimates arrival time at the moment of pickup — and the buffer it needs to keep a 90% promise.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+  <p class="eyebrow">NYC yellow taxis · predicted at pickup</p>
+  <h1>When will I get there?</h1>
+  <p class="lede">
+    A passenger has just got into the car. This model estimates the arrival
+    time from what is knowable at that moment — the clock, the two taxi
+    zones, and the length of the planned route — and then turns it into a
+    time the trip beats on nine journeys out of ten.
+  </p>
+  <nav class="jump">
+    <a href="#predictor">Try it</a>
+    <a href="#results">The July result</a>
+    <a href="#fails">Where it fails</a>
+    <a href="#how">How it works</a>
+  </nav>
+</header>
+
+<main>
+
+<section id="predictor" class="card">
+  <h2>A trip, at pickup</h2>
+  <p class="muted">
+    Only what an app knows before the ride: when, where from, where to.
+  </p>
+
+  <div class="grid">
+    <label>Pickup zone
+      <select id="pu"></select>
+    </label>
+    <label>Drop-off zone
+      <select id="do"></select>
+    </label>
+    <label>Pickup time
+      <input type="datetime-local" id="when">
+    </label>
+    <label>Passengers
+      <input type="number" id="pax" min="1" max="6" value="1">
+    </label>
+  </div>
+
+  <div class="readout">
+    <div class="headline">
+      <span class="label">The app should show</span>
+      <strong id="shown">—</strong>
+      <span class="unit">minutes</span>
+    </div>
+    <dl class="breakdown">
+      <div><dt>Model's estimate</dt><dd id="point">—</dd></div>
+      <div><dt>Buffer added</dt><dd id="buffer">—</dd></div>
+      <div><dt>Estimated route</dt><dd id="route">—</dd></div>
+      <div><dt>May trips behind it</dt><dd id="support">—</dd></div>
+    </dl>
+    <p class="caveat" id="caveat"></p>
+  </div>
+</section>
+
+<section class="note">
+  <h2>The honest part</h2>
+  <p>
+    The model was trained on <code>trip_distance</code>, which the meter
+    measures <em>during</em> the trip — so it already contains whatever
+    detour actually happened. No app has that number at pickup. This page
+    therefore estimates the route from the zone shapefile: centre to centre
+    in a straight line, times a detour factor of
+    <strong id="detour-factor">—</strong> learned on May. That estimate is
+    itself wrong by a median of <strong id="detour-error">—</strong> miles,
+    and that error is on top of every number below.
+  </p>
+  <p>
+    The project's scores were measured with the meter's own distance.
+    <strong>They are therefore better than this page can truly deliver</strong>,
+    and that is stated here for the same reason it is stated in the problem
+    card: it is the biggest caveat on the work.
+  </p>
+</section>
+
+<section id="results" class="card">
+  <h2>What it scores</h2>
+  <p class="muted">
+    May trains, June decides every choice, July was scored
+    <strong>once</strong>. Every number on this page is written by
+    <code>site/export.py</code> from the same <code>src/</code> code the
+    notebooks import.
+  </p>
+
+  <h3>The ladder, on June</h3>
+  <table id="ladder">
+    <thead><tr><th>Model</th><th>MAE (min)</th><th>RMSE</th><th>Bias</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="muted small">
+    The hand-written rule is <em>worse</em> than the median on MAE: one
+    typical speed badly overestimates long trips. It is still the more useful
+    rule, because its errors lean one way — a point the RMSE column makes.
+  </p>
+
+  <h3>July, scored once</h3>
+  <table id="july">
+    <thead><tr><th></th><th>MAE</th><th>95% interval</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="muted small">
+    1,000 bootstrap resamples. The intervals do not overlap, so the gap over
+    the baseline is not noise.
+  </p>
+
+  <h3>The buffer</h3>
+  <ul class="facts" id="buffer-facts"></ul>
+</section>
+
+<section id="fails" class="card">
+  <h2>Where it fails</h2>
+  <p class="muted">
+    One buffer cannot keep one promise across a whole city. These are June
+    numbers, with the trip count in each group. <strong>Gets</strong> is the
+    coverage a group actually receives from the single buffer above — the
+    target is 90%.
+  </p>
+
+  <h3>By borough</h3>
+  <table class="slices" id="slice-borough">
+    <thead><tr><th>Borough</th><th>n</th><th>MAE</th><th>Needs</th><th>Gets</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <h3>By distance</h3>
+  <table class="slices" id="slice-distance_band">
+    <thead><tr><th>Band</th><th>n</th><th>MAE</th><th>Needs</th><th>Gets</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <h3>Airport trips</h3>
+  <table class="slices" id="slice-airport">
+    <thead><tr><th>Airport trip</th><th>n</th><th>MAE</th><th>Needs</th><th>Gets</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <h3>By hour of pickup</h3>
+  <div class="bars" id="hours"></div>
+  <p class="muted small">
+    Bar height is MAE in minutes; a bar is marked when that hour's coverage
+    falls below the 90% promise.
+  </p>
+</section>
+
+<section id="how" class="card">
+  <h2>How it works</h2>
+  <dl class="how">
+    <div>
+      <dt>The target</dt>
+      <dd>Drop-off time minus pickup time, in minutes. Both come from the
+      meter, and neither is a feature — the drop-off time <em>is</em> the
+      answer.</dd>
+    </div>
+    <div>
+      <dt>The split</dt>
+      <dd>By pickup month, not a shuffle: <span id="split-n"></span>. The
+      model will always run on a month it has not seen.</dd>
+    </div>
+    <div>
+      <dt>Nothing from the end of the trip</dt>
+      <dd>The meter charges for time, so the fare contains the answer. The
+      fare, the tip, the total, every fee, the payment type and the rate code
+      are refused by an allow-list and a guard that raises.</dd>
+    </div>
+    <div>
+      <dt>The model</dt>
+      <dd>A single decision tree, depth <span id="depth"></span>,
+      <span id="nodes"></span> nodes, fitted on
+      <span id="rows"></span> May trips. Depth was chosen on June.</dd>
+    </div>
+    <div>
+      <dt>In the browser</dt>
+      <dd>No backend and no ML runtime: the tree and the preprocessor's
+      fitted numbers are exported to <code>model.json</code>
+      (<span id="model-size"></span>), and <code>model.js</code> walks it.
+      <code>node site/parity.js</code> checks those predictions against
+      scikit-learn on 2,000 June trips.</dd>
+    </div>
+  </dl>
+</section>
+
+<footer>
+  <p>
+    Team B · Project 1. The repository holds the problem card, the model card
+    with the full failure tables, and four notebooks that rebuild all of this
+    from the published raw files.
+  </p>
+  <p class="small muted">
+    Built with Claude's help, as declared in the repository README. Every
+    number here is produced by the code in that repository.
+  </p>
+</footer>
+
+</main>
+
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

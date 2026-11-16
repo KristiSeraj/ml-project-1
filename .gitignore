@@ -27,5 +27,6 @@ reports/figures/*
 
 # Editors and OS
 .idea/
+.claude/
 .vscode/
 .DS_Store
