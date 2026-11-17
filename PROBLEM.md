@@ -1,8 +1,5 @@
 # Problem card — How long will this trip take?
 
-Written before any modelling. Kept up to date: if the work contradicts this
-file, this file is fixed in the same commit.
-
 ## The question
 
 A passenger has just got into a yellow taxi. How many minutes until they
